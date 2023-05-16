@@ -19,7 +19,7 @@ public class User:BaseEntity
 
     public DateTime CreatedAt { get; set; }
 
-    public bool Active { get; private set; }
+    public bool Active { get; set; }
 
     public List<UserSkill> Skills { get; private set; }
 

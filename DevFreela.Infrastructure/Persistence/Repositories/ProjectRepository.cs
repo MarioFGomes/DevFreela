@@ -1,9 +1,11 @@
 ﻿using Dapper;
 using DevFreela.Core.Entities;
 using DevFreela.Core.Repositories;
+using DevFreela.Core.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +18,12 @@ public class ProjectRepository : IProjectRepository
 {
     private readonly DevFreelaDbContext _devFreelaDbContext;
     private readonly string? _ConnectionString;
-    public ProjectRepository(DevFreelaDbContext devFreelaDbContext, IConfiguration configuration)
+    private readonly ICachingService _cachingService;
+    public ProjectRepository(DevFreelaDbContext devFreelaDbContext, IConfiguration configuration, ICachingService cachingService)
     {
         _devFreelaDbContext=devFreelaDbContext;
         _ConnectionString = configuration.GetConnectionString("DevFreelaConnection");
+        _cachingService=cachingService;
     }
 
     public async Task AddAsync(Project project)
@@ -38,6 +42,15 @@ public class ProjectRepository : IProjectRepository
 
     public async Task<List<Project>> GetAllAsync()
     {
+        var key = "GetAllProject";
+
+        var cache = await _cachingService.GetAsync(key);
+
+        if (!string.IsNullOrWhiteSpace(cache))
+        {
+            return JsonConvert.DeserializeObject<List<Project>>(cache);
+        }
+
         // Usando o Dapper
 
         using (var sqlConetion = new SqlConnection(_ConnectionString))
@@ -48,13 +61,24 @@ public class ProjectRepository : IProjectRepository
 
             var skill = await sqlConetion.QueryAsync<Project>(script);
 
+            await _cachingService.SetAsync(key, JsonConvert.SerializeObject(skill));
+
             return skill.ToList();
         };
     }
 
     public async Task<Project> GetByIdAsync(int id)
     {
-       var project = await _devFreelaDbContext.Projects.Include(i=>i.Cliente).Include(f=>f.Freelancer).SingleAsync(i=>i.Id==id);
+        var key = "ProjectId";
+        var cache = await _cachingService.GetAsync($"{key}{id.ToString()}");
+
+        if (!string.IsNullOrWhiteSpace(cache))
+        {
+            return JsonConvert.DeserializeObject<Project>(cache);
+        }
+
+        var project = await _devFreelaDbContext.Projects.Include(i=>i.Cliente).Include(f=>f.Freelancer).SingleAsync(i=>i.Id==id);
+        await _cachingService.SetAsync($"{key}{id.ToString()}", JsonConvert.SerializeObject(project));
         return project;
     }
 

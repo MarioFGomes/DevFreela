@@ -5,6 +5,7 @@ using DevFreela.Application.Commands.EnableUser;
 using DevFreela.Application.Commands.LoginUser;
 using DevFreela.Application.Queries.GetUser;
 using DevFreela.Core.Enums;
+using DevFreela.Core.Services;
 using DevFreela.Infrastructure.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -14,19 +15,21 @@ namespace DevFreela.API.Controllers;
 
 [Route("api/Users")]
 [Authorize]
-[AuthorizationFilter]
 public class UsersController:ControllerBase
 {
 
     private readonly IMediator _mediator;
+    
 
     public UsersController(IMediator mediator)
     {
         _mediator = mediator;
+        
     }
 
     [HttpGet("{id:int}")]
     [Authorize(Roles = Roles.both)]
+    [AuthorizationFilter]
     public async Task<IActionResult> GetById(int id)
     {
         var command = new GetUserByIdQuery { Id=id};
@@ -59,6 +62,7 @@ public class UsersController:ControllerBase
 
     [HttpPut("{id:int}/enable")]
     [Authorize(Roles = Roles.admin)]
+    [AuthorizationFilter]
     public async Task<IActionResult> Enable(int id)
     {
         var command = new EnableUserCommand(id);
@@ -70,6 +74,7 @@ public class UsersController:ControllerBase
 
     [HttpPut("{id:int}/disable")]
     [Authorize(Roles = Roles.admin)]
+    [AuthorizationFilter]
     public async Task<IActionResult> Disable(int id)
     {
         var command = new DisableUserCommand(id);

@@ -14,6 +14,15 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using DevFreela.Infrastructure.Persistence.Caching;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using ElmahCore.Sql;
+using ElmahCore.Mvc;
+using Microsoft.AspNetCore.Http.Features;
+using DevFreela.Application.AutoMapper;
+using ElmahCore;
+using Elmah.Io.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +68,13 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICachingService, CachingService>();
+builder.Services.AddAutoMapper(typeof(MapperProfile));
+builder.Services.AddStackExchangeRedisCache(r =>
+{
+    r.Configuration = builder.Configuration.GetConnectionString("Redis");
+});
+
 //builder.Services.AddValidatorsFromAssemblyContaining<CreateUserCommandValidator>();
 builder.Services.AddControllers(options=>options.Filters.Add(typeof(ValidationFilter))).AddFluentValidation(f => f.RegisterValidatorsFromAssemblyContaining<CreateUserCommandValidator>());
 
@@ -94,6 +110,46 @@ var ConnectionString = builder.Configuration.GetConnectionString("DevFreelaConne
 
 builder.Services.AddDbContext<DevFreelaDbContext>(options => options.UseSqlServer(ConnectionString));
 
+
+// Adicionando o Health Check
+
+//Aqui adicionamos o HealthChecks
+builder.Services.AddHealthChecks().AddSqlServer(builder.Configuration.GetConnectionString("DevFreelaConnection"), name: "sqlserver", tags: new string[] { "db", "data", "sql" })
+                .AddRedis(builder.Configuration.GetConnectionString("Redis"), name: "redis", tags: new string[] { "db", "data", "nosql" });
+
+//Configurando a interface gráfica e o armazenamento do histórico
+builder.Services.AddHealthChecksUI(options =>
+{
+    options.SetEvaluationTimeInSeconds(5);
+    options.MaximumHistoryEntriesPerEndpoint(10);
+    options.AddHealthCheckEndpoint("API com Health Checks", "/health");
+}).AddInMemoryStorage(); //Aqui adicionamos o banco em memória
+
+
+// Configurando o ElmahCore
+
+builder.Services.Configure<ElmahIoOptions>(builder.Configuration.GetSection("ElmahIo"));
+if (!string.IsNullOrWhiteSpace(builder.Configuration["ElmahIo:HeartbeatId"]))
+{
+    builder.Services
+    .AddHealthChecks()
+    .AddElmahIoPublisher(options =>
+    {
+        options.ApiKey = "d6f140e44abc45b7b34ed64990fd8027";
+        options.LogId = new Guid("3f3d7951-bce0-4776-b577-0856c1ae27ef");
+        options.HeartbeatId = "12edb67bca8647cca3abace7d73c7a84";
+    });
+}
+builder.Services.AddElmahIo();
+
+
+builder.Services.AddElmah<SqlErrorLog>(options =>
+{
+    options.ConnectionString = ConnectionString;
+    options.Path = "/elmah";
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -110,7 +166,30 @@ app.UseCors(x=>x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseAuthentication();
 app.UseAuthorization();
 
-
 app.MapControllers();
+
+app.UseHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = p => true,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+app.UseHealthChecksUI(options => { options.UIPath = "/dashboard"; }); //Aqui ativamos o serviço e o caminho da chamada
+
+app.UseWhen(context=> context.Request.Path.StartsWithSegments("/elmah", StringComparison.OrdinalIgnoreCase),appBuilder=>
+{
+    appBuilder.Use(next =>
+    {
+        return async ctx =>
+        {
+            ctx.Features.Get<IHttpBodyControlFeature>().AllowSynchronousIO = true;
+            await next(ctx);
+        };
+    });
+});
+
+app.UseElmahIo();
+
+app.UseElmah();
 
 app.Run();

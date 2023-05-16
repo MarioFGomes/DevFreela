@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using AutoMapper;
+using Dapper;
 using DevFreela.Application.ViewModels;
 using DevFreela.Core.Repositories;
 using DevFreela.Infrastructure.Persistence;
@@ -17,10 +18,12 @@ namespace DevFreela.Application.Queries.GetProjectById
     public class GetProjectByIdQueryHandler : IRequestHandler<GetProjectByIdQuery, ProjectDetailsViewModel>
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IMapper _mapper;
 
-        public GetProjectByIdQueryHandler(IProjectRepository projectRepository)
+        public GetProjectByIdQueryHandler(IProjectRepository projectRepository, IMapper mapper)
         {
             _projectRepository = projectRepository;
+            _mapper = mapper;
         }
     
         public async Task<ProjectDetailsViewModel> Handle(GetProjectByIdQuery request, CancellationToken cancellationToken)
@@ -37,17 +40,7 @@ namespace DevFreela.Application.Queries.GetProjectById
             {
                 return null;
             }
-            var projectDetailsViewModel = new ProjectDetailsViewModel(
-                projects.Id,
-                projects.Title,
-                projects.Description,
-                projects.StartedAt,
-                projects.FinishedAt,
-                projects.TotalCost,
-                projects.Cliente.FullName,
-                projects.Freelancer.FullName
-
-             );
+            var projectDetailsViewModel = _mapper.Map<ProjectDetailsViewModel>(projects);
 
             return projectDetailsViewModel;
         }

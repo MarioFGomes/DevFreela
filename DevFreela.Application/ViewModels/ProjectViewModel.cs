@@ -19,9 +19,9 @@ public class ProjectViewModel
         status = (ProjectStatusEnum)Status;
     }
 
-    public int id { get; private set; }
-    public string title { get; private set; }
-    public DateTime createAt { get; private set; }
-    public string? description { get; private set; }
-    public ProjectStatusEnum status { get; private set; }
+    public int id { get;  set; }
+    public string title { get;  set; }
+    public DateTime createAt { get; set; }
+    public string? description { get; set; }
+    public ProjectStatusEnum status { get; set; }
 }

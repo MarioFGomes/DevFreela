@@ -26,7 +26,7 @@ public class AuthorizationFilter:Attribute,IAsyncAuthorizationFilter
             var token = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             var handler = new JwtSecurityTokenHandler();
             var json = handler.ReadJwtToken(token);
-            var email=json.Claims.First(claim => claim.Type == "Username").Value;
+            var email=json.Claims.First(claim => claim.Type == "Useremail").Value;
             var userService = context.HttpContext.RequestServices.GetService<IUserRepository>();
             var user = await userService.GetByEmail(email);
 

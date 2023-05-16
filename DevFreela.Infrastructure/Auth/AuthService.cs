@@ -52,7 +52,7 @@ public class AuthService : IAuthService
         var credentials= new SigningCredentials(secretyKey, SecurityAlgorithms.HmacSha256);
 
         var claim = new List<Claim> {
-           new  Claim("Username",email),
+           new  Claim("Useremail",email),
            new Claim("status",Active.ToString()),
            new Claim(ClaimTypes.Role,role)
         };

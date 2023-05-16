@@ -10,14 +10,17 @@ Dapper
 CQRS e MediatR
 Padrão Repository
 Validação de API com Fluent Validator
+Mapeamento das DTO para Entidades com AutoMaper
 Autenticação e Autorização com JWT
 Teste Unitário com XUnit e Moq
+Teste de Integração com XUnit
 Microserviços e mensageria com RabbitMQ
 Armazenamento de estrutura de dados em memória com Redis
-Monitoramento da saúde da API com Health Check
-Gestão e monitoramento da API com Elmah.io
-Docker-Container de Banco de Dados SQL Server
-Serilog-Monitoramento e Armazenamento de Logs  
+Monitoramento da saúde da API e dos serviços utilizados com Health Check
+Log de erros e verificações de integridade com Elmah.io
+Docker-Container de Banco de Dados SQL Server e Redis
+Serilog-Monitoramento e Armazenamento de Logs 
+CI/CD no Azure Devops
 
 
 Funcionalidades

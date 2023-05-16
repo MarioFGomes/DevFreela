@@ -1,4 +1,5 @@
-﻿using DevFreela.Application.ViewModels;
+﻿using AutoMapper;
+using DevFreela.Application.ViewModels;
 using DevFreela.Core.Repositories;
 using MediatR;
 using System;
@@ -12,9 +13,11 @@ namespace DevFreela.Application.Queries.GetUser
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDetailViewModel>
     {
         private readonly IUserRepository _userRepository;
-        public GetUserByIdQueryHandler(IUserRepository userRepository)
+        private readonly IMapper _mapper;
+        public GetUserByIdQueryHandler(IUserRepository userRepository, IMapper mapper)
         {
             _userRepository=userRepository;
+            _mapper=mapper;
         }
         public async Task<UserDetailViewModel> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
@@ -24,7 +27,7 @@ namespace DevFreela.Application.Queries.GetUser
                 return null;
             }
 
-            var user = new UserDetailViewModel(User.FullName, User.Email, User.BirthDate, User.Active,User.Password,User.Role);
+            var user = _mapper.Map<UserDetailViewModel>(User);
             return user;
         }
     }

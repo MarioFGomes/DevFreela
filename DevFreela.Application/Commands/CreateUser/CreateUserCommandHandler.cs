@@ -1,4 +1,5 @@
-﻿using DevFreela.Core.Entities;
+﻿using AutoMapper;
+using DevFreela.Core.Entities;
 using DevFreela.Core.Repositories;
 using DevFreela.Core.Services;
 using MediatR;
@@ -14,17 +15,23 @@ namespace DevFreela.Application.Commands.CreateUser
     {
         private readonly IUserRepository _userRepository;
         private readonly IAuthService _authService;
+        private readonly IMapper _mapper;
 
-        public CreateUserCommandHandler(IUserRepository userRepository, IAuthService authService)
+        public CreateUserCommandHandler(IUserRepository userRepository, IAuthService authService, IMapper mapper)
         {
             _userRepository = userRepository;
             _authService = authService;
+            _mapper = mapper;
         }
         public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
         {
             var PasswordHash = _authService.ComputeSha256Hash(request.Password);
-            var user = new User(request.FullName, request.Email, request.BirthDate,PasswordHash, request.Role);
+            request.Password = PasswordHash;
+
+            var user = _mapper.Map<User>(request);
+
             await _userRepository.AddAsync(user);
+
             return user.Id;  
         }
     }
