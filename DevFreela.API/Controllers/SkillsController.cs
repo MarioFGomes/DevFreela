@@ -8,6 +8,7 @@ using DevFreela.Infrastructure.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace DevFreela.API.Controllers;
 

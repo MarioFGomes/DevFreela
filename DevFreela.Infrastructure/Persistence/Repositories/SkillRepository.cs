@@ -6,6 +6,7 @@ using DevFreela.Core.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,35 +29,60 @@ public class SkillRepository : ISkillRepository
 
     public async Task AddAsync(Skill skill)
     {
-        await _devFreelaDbContext.Skills.AddAsync(skill);
+        try
+        {
+            Log.Information("Adicionando Skill");
 
-        await _devFreelaDbContext.SaveChangesAsync();
-        await _cachingService.SetAsync(skill.Id.ToString(), JsonConvert.SerializeObject(skill));
+            await _devFreelaDbContext.Skills.AddAsync(skill);
+
+            await _devFreelaDbContext.SaveChangesAsync();
+            await _cachingService.SetAsync(skill.Id.ToString(), JsonConvert.SerializeObject(skill));
+
+        }catch (Exception ex)
+        {
+            var data=JsonConvert.SerializeObject(skill);
+            Log.Error(ex,$"Erro adicionando Skill:{data}");
+         
+        }
+       
 
     }
 
     public async Task<List<SkillDTO>> GetAllAsync()
     {
-        var key = "GetAllSkill";
-
-        var cache = await _cachingService.GetAsync(key);
-
-        if (!string.IsNullOrWhiteSpace(cache))
+        try
         {
-            return JsonConvert.DeserializeObject<List<SkillDTO>>(cache);
+
+            Log.Information("pesquisando todas as Skill");
+
+            var key = "GetAllSkill";
+
+            var cache = await _cachingService.GetAsync(key);
+
+            if (!string.IsNullOrWhiteSpace(cache))
+            {
+                return JsonConvert.DeserializeObject<List<SkillDTO>>(cache);
+            }
+
+            using (var sqlConetion = new SqlConnection(_connectionString))
+            {
+                sqlConetion.Open();
+
+                var script = "SELECT [Id],[Description] FROM Skills";
+
+                var skill = await sqlConetion.QueryAsync<SkillDTO>(script);
+
+                await _cachingService.SetAsync(key, JsonConvert.SerializeObject(skill));
+
+                return skill.ToList();
+            }
+
         }
-
-        using (var sqlConetion = new SqlConnection(_connectionString))
+        catch (Exception ex)
         {
-            sqlConetion.Open();
+            Log.Error(ex,"Erro pesquisando Skill");
 
-            var script = "SELECT [Id],[Description] FROM Skills";
-
-            var skill = await sqlConetion.QueryAsync<SkillDTO>(script);
-
-            await _cachingService.SetAsync(key, JsonConvert.SerializeObject(skill));
-
-            return skill.ToList();
+            return new List<SkillDTO>();
         }
     }
 }

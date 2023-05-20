@@ -23,6 +23,8 @@ using Microsoft.AspNetCore.Http.Features;
 using DevFreela.Application.AutoMapper;
 using ElmahCore;
 using Elmah.Io.AspNetCore;
+using Serilog;
+using Serilog.Sinks.MSSqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -148,6 +150,18 @@ builder.Services.AddElmah<SqlErrorLog>(options =>
     options.ConnectionString = ConnectionString;
     options.Path = "/elmah";
 });
+
+builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+{
+    Serilog.Log.Logger= (Serilog.ILogger)new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .WriteTo.MSSqlServer(ConnectionString,
+    sinkOptions:new MSSqlServerSinkOptions()
+    {
+        AutoCreateSqlTable = true,
+        TableName="Logs"
+    }).WriteTo.Console().CreateLogger();
+}).UseSerilog();
 
 
 var app = builder.Build();
