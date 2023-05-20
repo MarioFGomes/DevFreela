@@ -23,11 +23,6 @@ stages:          # List of stages for jobs, and their order of execution
   - build
   - test
 
-job:
-  before_script:
-    - echo "Execute this command before any 'script:' commands."
-  script:
-    - dotnet restore
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
