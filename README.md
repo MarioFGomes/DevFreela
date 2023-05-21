@@ -20,7 +20,7 @@ Tecnologias e práticas utilizadas
 * Log de erros e verificações de integridade com Elmah.io
 * Docker-Container de Banco de Dados SQL Server e Redis
 * Serilog-Monitoramento e Armazenamento de Logs 
-* CI/CD no Azure Devops
+* CI/CD no GitLab
 
 
 Funcionalidades

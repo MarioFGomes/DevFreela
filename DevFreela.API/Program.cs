@@ -25,6 +25,7 @@ using ElmahCore;
 using Elmah.Io.AspNetCore;
 using Serilog;
 using Serilog.Sinks.MSSqlServer;
+using DevFreela.Infrastructure.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +71,7 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPaymentsService, PaymentsService>();
 builder.Services.AddScoped<ICachingService, CachingService>();
 builder.Services.AddAutoMapper(typeof(MapperProfile));
 builder.Services.AddStackExchangeRedisCache(r =>
@@ -79,7 +81,7 @@ builder.Services.AddStackExchangeRedisCache(r =>
 
 //builder.Services.AddValidatorsFromAssemblyContaining<CreateUserCommandValidator>();
 builder.Services.AddControllers(options=>options.Filters.Add(typeof(ValidationFilter))).AddFluentValidation(f => f.RegisterValidatorsFromAssemblyContaining<CreateUserCommandValidator>());
-
+builder.Services.AddHttpClient();
 
 
 

@@ -8,5 +8,5 @@ public enum ProjectStatusEnum
     Suspended=3,
     Cancelled=4,
     Finished=5,
-    Deleted=0
+    payment=6
 }

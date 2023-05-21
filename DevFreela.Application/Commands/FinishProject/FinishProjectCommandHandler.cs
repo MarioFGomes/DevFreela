@@ -1,5 +1,7 @@
-﻿using DevFreela.Core.Repositories;
+﻿using DevFreela.Core.DTO;
+using DevFreela.Core.Repositories;
 using DevFreela.Infrastructure.Persistence;
+using DevFreela.Infrastructure.Service;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,15 +15,26 @@ namespace DevFreela.Application.Commands.FinishProject
     public class FinishProjectCommandHandler : IRequestHandler<FinishProjectCommand, Unit>
     {
         private readonly IProjectRepository _projectRepository;
-        public FinishProjectCommandHandler(IProjectRepository projectRepository)
+        private readonly IPaymentsService _paymentsService;
+        public FinishProjectCommandHandler(IProjectRepository projectRepository, IPaymentsService paymentsService)
         {
-           _projectRepository=projectRepository;    
+           _projectRepository=projectRepository;
+           _paymentsService=paymentsService;
         }
         public async Task<Unit> Handle(FinishProjectCommand request, CancellationToken cancellationToken)
         {
             var project = await _projectRepository.GetByIdAsync(request.Id);
-            project.Finish();
+       
 
+            var paymentDTO = new PaymentDTO(request.Id, request.CreditCardNumber, request.Cvv, request.ExpiresAt, request.FullName, request.Amount);
+
+            var result = await _paymentsService.ProcessPayment(paymentDTO);
+
+            if (result)
+            {
+                project.Payment();
+                project.Finish();
+            }
            await _projectRepository.SaveChangeAsync();
 
             return Unit.Value;

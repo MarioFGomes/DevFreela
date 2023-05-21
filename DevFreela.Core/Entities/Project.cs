@@ -57,7 +57,7 @@ public class Project: BaseEntity
 
     public void Finish()
     {
-        if (Status == ProjectStatusEnum.InProgress)
+        if (Status == ProjectStatusEnum.payment)
         {
             Status = ProjectStatusEnum.Finished;
             FinishedAt = DateTime.Now;
@@ -71,6 +71,14 @@ public class Project: BaseEntity
             Status = ProjectStatusEnum.Cancelled;
         }
 
+    }
+
+    public void Payment()
+    {
+        if (Status == ProjectStatusEnum.InProgress)
+        {
+            Status = ProjectStatusEnum.payment;
+        }
     }
 
 
