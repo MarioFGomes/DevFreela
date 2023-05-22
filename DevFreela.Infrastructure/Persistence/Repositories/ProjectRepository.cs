@@ -71,7 +71,7 @@ public class ProjectRepository : IProjectRepository
 
             var cache = await _cachingService.GetAsync(key);
 
-            if (!string.IsNullOrWhiteSpace(cache))
+            if (!string.IsNullOrWhiteSpace(cache) && cache != "null")
             {
                 return JsonConvert.DeserializeObject<List<Project>>(cache);
             }
@@ -106,22 +106,34 @@ public class ProjectRepository : IProjectRepository
         {
             Log.Information("Pesquisando Projeto por Id");
 
-            var key = "ProjectId";
-            var cache = await _cachingService.GetAsync($"{key}{id.ToString()}");
+            var key = "ProjectId"+id;
+            var cache = await _cachingService.GetAsync($"{key}");
 
-            if (!string.IsNullOrWhiteSpace(cache))
+            if (!string.IsNullOrWhiteSpace(cache) && cache != "null")
             {
-                return JsonConvert.DeserializeObject<Project>(cache);
+                var data= JsonConvert.DeserializeObject<Project>(cache, new JsonSerializerSettings()
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                });
+                return data;
             }
 
             var project = await _devFreelaDbContext.Projects.Include(i => i.Cliente).Include(f => f.Freelancer).SingleAsync(i => i.Id == id);
-            await _cachingService.SetAsync($"{key}{id.ToString()}", JsonConvert.SerializeObject(project));
+
+            var projectJson = JsonConvert.SerializeObject(project, Formatting.Indented,
+                        new JsonSerializerSettings()
+                        {
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore, 
+                            NullValueHandling=NullValueHandling.Ignore
+                        });
+
+            await _cachingService.SetAsync($"{key}", projectJson);
             return project;
 
         }
         catch(Exception ex)
         {
-            Log.Error(ex, $"Erro pesquisando erro por Id:{id}");
+            Log.Error(ex, $"Erro pesquisando Projeto por Id:{id}");
 
             return new Project();
         }
@@ -129,6 +141,45 @@ public class ProjectRepository : IProjectRepository
 
     public async Task SaveChangeAsync()
     {
-        await _devFreelaDbContext.SaveChangesAsync();
+        
+        try
+        {
+            Log.Information("Salvando Alterações no Banco");
+
+            await _devFreelaDbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Erro salvando alterações no banco de dados");
+        }
+    }
+
+    public async Task UpdateChangesAsync(Project project)
+    {
+        try
+        {
+            Log.Information("Atualizando Projeto");
+
+          _devFreelaDbContext.Entry(project).State = EntityState.Modified;
+            var key = "ProjectId" + project.Id;
+
+             await _cachingService.RemoveAsync($"{key}");
+
+            var projectJson = JsonConvert.SerializeObject(project, Formatting.Indented,
+                       new JsonSerializerSettings()
+                       {
+                           ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                           NullValueHandling = NullValueHandling.Ignore
+                       });
+
+            await _cachingService.SetAsync(key, projectJson);
+
+            await _devFreelaDbContext.SaveChangesAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Erro ao Atualizar Projeto:{project}");
+        }
     }
 }

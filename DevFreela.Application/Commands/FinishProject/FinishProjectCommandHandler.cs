@@ -28,14 +28,11 @@ namespace DevFreela.Application.Commands.FinishProject
 
             var paymentDTO = new PaymentDTO(request.Id, request.CreditCardNumber, request.Cvv, request.ExpiresAt, request.FullName, request.Amount);
 
-            var result = await _paymentsService.ProcessPayment(paymentDTO);
+            _paymentsService.ProcessPayment(paymentDTO);
 
-            if (result)
-            {
-                project.Payment();
-                project.Finish();
-            }
-           await _projectRepository.SaveChangeAsync();
+             project.Payment();
+           
+           await _projectRepository.UpdateChangesAsync(project);
 
             return Unit.Value;
         }

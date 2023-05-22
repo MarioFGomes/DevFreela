@@ -26,6 +26,8 @@ using Elmah.Io.AspNetCore;
 using Serilog;
 using Serilog.Sinks.MSSqlServer;
 using DevFreela.Infrastructure.Service;
+using Newtonsoft.Json;
+using DevFreela.Infrastructure.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +75,11 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPaymentsService, PaymentsService>();
 builder.Services.AddScoped<ICachingService, CachingService>();
+builder.Services.AddScoped<IMessageBusService, MessageBusService>();
+builder.Services.AddControllers().AddNewtonsoftJson(x => {
+    x.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+});
+
 builder.Services.AddAutoMapper(typeof(MapperProfile));
 builder.Services.AddStackExchangeRedisCache(r =>
 {

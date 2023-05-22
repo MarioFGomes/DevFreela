@@ -75,7 +75,7 @@ public class UserRepository : IUserRepository
 
             var cache = await _cachingService.GetAsync(email);
 
-            if (!string.IsNullOrWhiteSpace(cache))
+            if (!string.IsNullOrWhiteSpace(cache) && cache!="null")
             {
                 return JsonConvert.DeserializeObject<User>(cache);
             }

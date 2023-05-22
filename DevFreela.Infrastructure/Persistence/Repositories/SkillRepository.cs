@@ -59,7 +59,7 @@ public class SkillRepository : ISkillRepository
 
             var cache = await _cachingService.GetAsync(key);
 
-            if (!string.IsNullOrWhiteSpace(cache))
+            if (!string.IsNullOrWhiteSpace(cache) && cache != "null")
             {
                 return JsonConvert.DeserializeObject<List<SkillDTO>>(cache);
             }

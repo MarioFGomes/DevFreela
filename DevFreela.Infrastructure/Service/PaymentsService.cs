@@ -1,4 +1,5 @@
 ﻿using DevFreela.Core.DTO;
+using DevFreela.Core.Services;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -12,29 +13,22 @@ namespace DevFreela.Infrastructure.Service
 {
     public class PaymentsService : IPaymentsService
     {
-        private readonly string _paymentBaseUrl;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMessageBusService _messageBusService;
+        private const string Quee_Name = "Payment";
 
-        public PaymentsService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public PaymentsService(IMessageBusService messageBusService)
         {
-            _httpClientFactory = httpClientFactory;
-            _paymentBaseUrl = configuration.GetSection("Services:payments").Value;
+            _messageBusService= messageBusService;
         }
 
-        public async Task<bool> ProcessPayment(PaymentDTO pyment)
+        public void ProcessPayment(PaymentDTO pyment)
         {
-            var url = $"{_paymentBaseUrl}/api/payments";
             var paymentJson=JsonSerializer.Serialize(pyment);
-            var paymentContent=new StringContent(
-                paymentJson,
-                Encoding.UTF8,
-                "application/json"
-                );
-            var httpclient= _httpClientFactory.CreateClient("Payments");
 
-            var response= await httpclient.PostAsync(url, paymentContent);
+            var paymentBytes= Encoding.UTF8.GetBytes(paymentJson);
 
-            return response.IsSuccessStatusCode;
+            _messageBusService.Publish(Quee_Name, paymentBytes);
+
         }
     }
 }

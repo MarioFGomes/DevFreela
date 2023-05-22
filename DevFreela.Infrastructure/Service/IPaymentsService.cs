@@ -9,6 +9,6 @@ namespace DevFreela.Infrastructure.Service
 {
     public interface IPaymentsService
     {
-        Task<bool> ProcessPayment(PaymentDTO pyment);
+        void ProcessPayment(PaymentDTO pyment);
     }
 }

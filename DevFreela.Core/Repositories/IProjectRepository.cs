@@ -14,5 +14,8 @@ public interface IProjectRepository
 
     Task SaveChangeAsync();
 
-  
+    Task UpdateChangesAsync(Project project);
+
+
+
 }

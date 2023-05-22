@@ -30,12 +30,7 @@ namespace DevFreela.Application.Queries.GetProjectById
         {
             var projects = await _projectRepository.GetByIdAsync(request.Id);
                 
-                //await _devFreelaDbContext.Projects
-                //.Include(p => p.Cliente)
-                //.Include(p => p.Freelancer)
-                //.SingleOrDefaultAsync(i => i.Id == request.Id);
-
-
+            
             if (projects == null)
             {
                 return null;

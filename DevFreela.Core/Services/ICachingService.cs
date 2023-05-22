@@ -16,5 +16,6 @@ namespace DevFreela.Core.Services
         Task RefreshAsync(string key);
         void Remove(string key);
         Task RemoveAsync(string key);
+        
     }
 }

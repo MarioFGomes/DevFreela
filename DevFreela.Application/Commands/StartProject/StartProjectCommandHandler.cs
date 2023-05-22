@@ -24,7 +24,7 @@ namespace DevFreela.Application.Commands.StartProject
             
             project.Start();
 
-            await _projectRepository.SaveChangeAsync();
+            await _projectRepository.UpdateChangesAsync(project);
 
             return Unit.Value;
           
