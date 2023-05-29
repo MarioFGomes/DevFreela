@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DevFreela.Application.AutoMapper;
 using DevFreela.Application.Commands.CreateProject;
 using DevFreela.Core.Entities;
 using DevFreela.Core.Repositories;
@@ -14,25 +15,29 @@ namespace UnitTeste.Application.Command;
 
 public class CreateProjectCommandHandlerTest
 {
-    //[Fact]
-    //public async Task InputDataOk_Executed_ReturnProjectId()
-    //{
-    //    // Arrange
+    [Fact]
+    public async Task InputDataOk_Executed_ReturnProjectId()
+    {
+        // Arrange
 
-    //     var ProjectRepositoryMock = new Mock<IProjectRepository>();
-       
-      
+        var ProjectRepositoryMock = new Mock<IProjectRepository>();
 
-    //    var createProjectCommand=new CreateProjectCommand { Description="Titulo de teste", IdClient=1, IdFreelancer=1, Title="Novo Projeto", TotalCost=5000000 };
+        var configuracao = new MapperConfiguration(config =>
+        {
+            config.AddProfile<MapperProfile>();
+        });
+        var mapper=configuracao.CreateMapper();
 
-    //    var createProjectCommandHandler = new CreateProjectCommandHandler(ProjectRepositoryMock.Object, mapper.Object);
-    //    //Action
+        var createProjectCommand = new CreateProjectCommand { Description = "Titulo de teste", IdClient = 1, IdFreelancer = 1, Title = "Novo Projeto", TotalCost = 5000000 };
 
-    //    var id = await createProjectCommandHandler.Handle(createProjectCommand, new CancellationToken());
-    //    //Assert
+        var createProjectCommandHandler = new CreateProjectCommandHandler(ProjectRepositoryMock.Object, mapper);
+        //Action
 
-    //    Assert.True(id >= 0);
-    //    ProjectRepositoryMock.Verify(p => p.AddAsync(It.IsAny<Project>()), Times.Once);
+        var id = await createProjectCommandHandler.Handle(createProjectCommand, new CancellationToken());
+        //Assert
 
-    //}
+        Assert.True(id >= 0);
+        ProjectRepositoryMock.Verify(p => p.AddAsync(It.IsAny<Project>()), Times.Once);
+
+    }
 }
